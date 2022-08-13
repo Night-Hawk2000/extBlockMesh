@@ -31,7 +31,9 @@ License
 #include "Time.H"
 #include "IOmanip.H"
 
-#if (OPENFOAM >= 1806)
+#if (OPENFOAM >= 2206)
+    #include "polyMeshFields.H"
+#elif (OPENFOAM >= 1806)
     #include "polyFields.H"
 #else
     #include "backport_polyFields.H"
@@ -466,13 +468,21 @@ Foam::label Foam::MeshSmoother::updateAndWrite
     const bool withQuality
 )
 {
+    #if (OPENFOAM >=2206)
+    std::unique_ptr<polyMeshScalarField> qualityFieldPtr;
+    #else
     std::unique_ptr<polyScalarField> qualityFieldPtr;
+    #endif
 
     if (withQuality)
     {
         qualityFieldPtr.reset
         (
+           #if (OPENFOAM >= 2206)
+            new polyMeshScalarField
+           #else
             new polyScalarField
+           #endif
             (
                 IOobject
                 (
